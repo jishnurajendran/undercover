@@ -1,0 +1,2058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Undercover</title>
+<style>
+  /* ───────────────────────── CSS: Theme & Reset ─────────────────────────
+     Retro Spy — mid-century dossier: warm paper, teal & orange, geometric
+     badges. Old semantic variable names are kept (so every rule below still
+     just works) but repointed at the new palette:
+       --bg/--bg-elevated/--bg-card  → warm paper surfaces (page/inset/card)
+       --border                      → ruled-paper hairline
+       --text/--text-dim             → dossier ink (primary/secondary)
+       --accent/--accent-strong      → burnt orange (the chosen CTA accent)
+       --danger/--danger-strong      → brick red (destructive/error)
+       --success                     → deep teal (wins, ready states)
+       --warn                        → mustard (reserved accent, unused yet)
+  ------------------------------------------------------------------------ */
+  :root {
+    --bg: #f2e6c9;
+    --bg-elevated: #e7d5a9;
+    --bg-card: #fbf4e3;
+    --border: #c9b384;
+    --border-strong: #a88f5c;
+    --text: #241c13;
+    --text-dim: #6b5d45;
+    --accent: #d9622b;
+    --accent-strong: #b84e1f;
+    --danger: #a23b2e;
+    --danger-strong: #832d22;
+    --success: #0e6e68;
+    --success-strong: #0a524d;
+    --warn: #c68a1e;
+    --alert: #d93f24;
+    --alert-strong: #b3331b;
+    --focus-ring: #b5760f;
+    --radius: 8px;
+    --radius-sm: 5px;
+    --tap: 48px;
+    --ease: cubic-bezier(.2, .8, .2, 1);
+    --dur: 160ms;
+    --font-display: Futura, "Century Gothic", "Avenir Next", Avenir, "Segoe UI",
+      -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 16px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100%;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+      sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    line-height: 1.4;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+  }
+
+  /* Faint dossier-paper dot grid — restrained texture, not a loud pattern. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(var(--border-strong) 1px, transparent 1px);
+    background-size: 18px 18px;
+    opacity: 0.16;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    max-width: 560px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+    position: relative;
+    z-index: 1;
+  }
+
+  .screen {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    padding: 20px 0 32px;
+    gap: 18px;
+  }
+
+  .screen.active {
+    display: flex;
+    animation: screen-in var(--dur) var(--ease);
+  }
+
+  @keyframes screen-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  h1, h2, h3 { margin: 0; line-height: 1.2; font-family: var(--font-display); }
+  h1 { font-size: 1.5rem; }
+  h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--success);
+  }
+  h3 { font-size: 1.05rem; color: var(--text-dim); font-weight: 600; }
+  p { margin: 0; color: var(--text-dim); }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 6px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--success);
+    box-shadow: 0 3px 0 -2px var(--accent);
+  }
+  .brand-icon {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+  .brand h1 {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 800;
+    color: var(--success);
+  }
+  .brand .tag {
+    font-size: 0.75rem;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-left: auto;
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .btn {
+    min-height: var(--tap);
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text);
+    font-family: var(--font-display);
+    font-size: 0.98rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.08s var(--ease), background var(--dur) var(--ease),
+      border-color var(--dur) var(--ease);
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent-strong);
+    color: #fbf4e3;
+  }
+  .btn-primary:active { background: var(--accent-strong); }
+  .btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .btn-danger {
+    background: var(--danger);
+    border-color: var(--danger-strong);
+    color: #fbf4e3;
+  }
+  .btn-danger:active { background: var(--danger-strong); }
+  .btn-ghost {
+    background: transparent;
+  }
+  .btn-block { width: 100%; }
+  .btn-sm {
+    min-height: 40px;
+    padding: 8px 14px;
+    font-size: 0.88rem;
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .row-between { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .grow { flex: 1; }
+
+  input[type="text"] {
+    min-height: var(--tap);
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--bg-elevated);
+    color: var(--text);
+    font-size: 1rem;
+    width: 100%;
+  }
+  input[type="text"]:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 1px;
+  }
+
+  .player-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .player-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: var(--bg-elevated);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+  }
+  .player-list .name { font-weight: 600; }
+  .player-list .remove-btn {
+    min-height: 40px;
+    min-width: 40px;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--danger);
+    font-size: 1.1rem;
+    transition: background var(--dur) var(--ease);
+  }
+  .player-list .remove-btn:active { background: var(--bg-card); }
+
+  .stepper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .stepper button {
+    min-width: var(--tap);
+    min-height: var(--tap);
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--bg-elevated);
+    color: var(--text);
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 700;
+    transition: background var(--dur) var(--ease);
+  }
+  .stepper button:active:not(:disabled) { background: var(--bg-card); }
+  .stepper button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  .stepper .value {
+    min-width: 2.2ch;
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--success);
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-row .label { font-weight: 600; }
+  .toggle-row .desc { font-size: 0.82rem; color: var(--text-dim); margin-top: 2px; }
+
+  .switch {
+    position: relative;
+    width: 50px;
+    height: 30px;
+    flex-shrink: 0;
+  }
+  .switch input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    cursor: pointer;
+    z-index: 1;
+  }
+  .switch .track {
+    position: absolute;
+    inset: 0;
+    background: var(--border-strong);
+    border-radius: 999px;
+    transition: background var(--dur) var(--ease);
+  }
+  .switch .thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    transition: transform var(--dur) var(--ease);
+  }
+  .switch input:checked ~ .track { background: var(--success); }
+  .switch input:checked ~ .thumb { transform: translateX(20px); }
+  .switch input:focus-visible ~ .track { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+
+  .status-line {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .status-line.ready { color: var(--success); font-weight: 600; }
+  .status-line.error { color: var(--danger); font-weight: 600; }
+
+  .error-box {
+    background: rgba(162, 59, 46, 0.1);
+    border: 1.5px solid var(--danger);
+    border-radius: var(--radius);
+    padding: 14px;
+    color: var(--text);
+    font-size: 0.9rem;
+  }
+  .error-box strong { color: var(--danger); }
+
+  /* Reveal screen */
+  .reveal-stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 20px;
+  }
+  .reveal-name { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; }
+  .reveal-word-box {
+    width: 100%;
+    max-width: 360px;
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    box-shadow: 5px 5px 0 -1px var(--bg-elevated), 5px 5px 0 0 var(--border);
+  }
+  .reveal-word {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+  }
+  .reveal-hint { font-size: 0.85rem; color: var(--text-dim); }
+  .role-tag {
+    display: inline-block;
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 5px 14px;
+    background: var(--alert);
+    color: #fbf4e3;
+    clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+  }
+  /* Author `display` rules always beat the UA [hidden] rule regardless of specificity,
+     so without this the `hidden` attribute would silently fail to hide role tags. */
+  .role-tag[hidden] {
+    display: none;
+  }
+  .role-tag.base-role {
+    font-size: 0.82rem;
+    padding: 6px 16px;
+    background: var(--success);
+  }
+
+  /* Vote screen */
+  .vote-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .vote-list button.btn {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .vote-list button.selected {
+    border-color: var(--accent);
+    background: rgba(217, 98, 43, 0.14);
+  }
+
+  .banner {
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    font-size: 1.1rem;
+  }
+  .banner.win { background: rgba(14, 110, 104, 0.12); border: 1.5px solid var(--success); color: var(--success); }
+  .banner.lose { background: rgba(162, 59, 46, 0.1); border: 1.5px solid var(--danger); color: var(--danger); }
+  .banner.neutral { background: var(--bg-card); border: 1.5px solid var(--border); color: var(--text); }
+
+  table.score-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+  }
+  table.score-table th, table.score-table td {
+    text-align: left;
+    padding: 8px 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  table.score-table th {
+    color: var(--success);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* Confirm dialog */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(36, 28, 19, 0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 50;
+  }
+  .overlay.active { display: flex; }
+  .dialog {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    max-width: 400px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    animation: screen-in var(--dur) var(--ease);
+  }
+  .dialog .actions { display: flex; gap: 10px; }
+  .dialog .actions .btn { flex: 1; }
+
+  .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .footer-note {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    text-align: center;
+    padding-top: 8px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Shared live region for game announcements -->
+  <div id="announcer" class="sr-only" aria-live="polite" role="status"></div>
+
+  <!-- ═══════════════════════ SCREEN 1: SETUP ═══════════════════════ -->
+  <section id="screen-setup" class="screen">
+    <div class="brand">
+      <svg class="brand-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <circle cx="10" cy="10" r="7" fill="none" stroke="var(--success)" stroke-width="2.5"/>
+        <line x1="15.3" y1="15.3" x2="21" y2="21" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      <h1>Undercover</h1>
+      <span class="tag">Pass &amp; Play</span>
+    </div>
+
+    <div id="setup-error" class="error-box" hidden></div>
+
+    <div class="card stack">
+      <h2>Players</h2>
+      <form id="add-player-form" class="row">
+        <input type="text" id="add-player-input" class="grow" placeholder="Player name" autocomplete="off" maxlength="24">
+        <button type="submit" class="btn btn-primary">Add</button>
+      </form>
+      <ul id="player-list" class="player-list"></ul>
+      <p id="player-count-label"></p>
+    </div>
+
+    <div class="card stack">
+      <h2>Roles</h2>
+      <div class="row-between">
+        <div>
+          <div class="label">Undercovers</div>
+        </div>
+        <div class="stepper">
+          <button type="button" id="undercover-minus" aria-label="Decrease Undercovers">&minus;</button>
+          <span id="undercover-value" class="value">1</span>
+          <button type="button" id="undercover-plus" aria-label="Increase Undercovers">+</button>
+        </div>
+      </div>
+      <div class="row-between">
+        <div>
+          <div class="label">Mr. White</div>
+        </div>
+        <div class="stepper">
+          <button type="button" id="mrwhite-minus" aria-label="Decrease Mr. White count">&minus;</button>
+          <span id="mrwhite-value" class="value">0</span>
+          <button type="button" id="mrwhite-plus" aria-label="Increase Mr. White count">+</button>
+        </div>
+      </div>
+      <p id="role-summary"></p>
+    </div>
+
+    <div class="card stack">
+      <div class="toggle-row">
+        <div>
+          <div class="label">Enable Special Roles</div>
+          <div class="desc">Joyful Fool, Mr. Mime, Lovers, Revenger, Goddess of Justice, Boomerang</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="specials-enabled">
+          <span class="track"></span><span class="thumb"></span>
+        </label>
+      </div>
+      <div id="specials-list" hidden>
+        <div class="toggle-row">
+          <div>
+            <div class="label">Joyful Fool</div>
+            <div class="desc">Bonus points if eliminated first by vote</div>
+          </div>
+          <div class="stepper" data-role="JOYFUL_FOOL">
+            <button type="button" class="role-minus" aria-label="Decrease Joyful Fool count">&minus;</button>
+            <span class="value role-value">0</span>
+            <button type="button" class="role-plus" aria-label="Increase Joyful Fool count">+</button>
+          </div>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="label">Mr. Mime</div>
+            <div class="desc">Must act out their word with gestures (never Mr. White)</div>
+          </div>
+          <div class="stepper" data-role="MIME">
+            <button type="button" class="role-minus" aria-label="Decrease Mr. Mime count">&minus;</button>
+            <span class="value role-value">0</span>
+            <button type="button" class="role-plus" aria-label="Increase Mr. Mime count">+</button>
+          </div>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="label">The Lovers</div>
+            <div class="desc" id="lovers-desc">Pairs of linked players (needs 5+ players)</div>
+          </div>
+          <div class="stepper" data-role="LOVER">
+            <button type="button" class="role-minus" aria-label="Decrease Lover pairs">&minus;</button>
+            <span class="value role-value">0</span>
+            <button type="button" class="role-plus" aria-label="Increase Lover pairs">+</button>
+          </div>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="label">The Revenger</div>
+            <div class="desc">Drags a player down when voted out</div>
+          </div>
+          <div class="stepper" data-role="REVENGER">
+            <button type="button" class="role-minus" aria-label="Decrease Revenger count">&minus;</button>
+            <span class="value role-value">0</span>
+            <button type="button" class="role-plus" aria-label="Increase Revenger count">+</button>
+          </div>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="label">Goddess of Justice</div>
+            <div class="desc">Breaks tie votes, even if dead</div>
+          </div>
+          <div class="stepper" data-role="GODDESS">
+            <button type="button" class="role-minus" aria-label="Decrease Goddess of Justice count">&minus;</button>
+            <span class="value role-value">0</span>
+            <button type="button" class="role-plus" aria-label="Increase Goddess of Justice count">+</button>
+          </div>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="label">The Boomerang</div>
+            <div class="desc">Deflects the first majority vote against them</div>
+          </div>
+          <div class="stepper" data-role="BOOMERANG">
+            <button type="button" class="role-minus" aria-label="Decrease Boomerang count">&minus;</button>
+            <span class="value role-value">0</span>
+            <button type="button" class="role-plus" aria-label="Increase Boomerang count">+</button>
+          </div>
+        </div>
+        <p class="footer-note" style="text-align:left; padding-top:0;">Roles are dealt out to players round-robin — everyone gets at most one modifier before anyone gets a second.</p>
+      </div>
+    </div>
+
+    <div class="card stack">
+      <div id="word-status" class="status-line">Loading words&hellip;</div>
+    </div>
+
+    <button type="button" id="start-game-btn" class="btn btn-primary btn-block" disabled>Start Game</button>
+  </section>
+
+  <!-- ═══════════════════════ SCREEN 2: REVEAL ═══════════════════════ -->
+  <section id="screen-reveal" class="screen">
+    <div class="brand">
+      <svg class="brand-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <circle cx="10" cy="10" r="7" fill="none" stroke="var(--success)" stroke-width="2.5"/>
+        <line x1="15.3" y1="15.3" x2="21" y2="21" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      <h1>Undercover</h1>
+    </div>
+    <div class="reveal-stage">
+      <div id="reveal-pass" class="stack" style="align-items:center;">
+        <p>Pass the device to</p>
+        <div id="reveal-pass-name" class="reveal-name"></div>
+        <button type="button" id="reveal-tap-btn" class="btn btn-primary btn-block">Tap to Reveal</button>
+      </div>
+      <div id="reveal-shown" class="stack" style="align-items:center; display:none;">
+        <div id="reveal-shown-name" class="reveal-name"></div>
+        <div class="reveal-word-box">
+          <span id="reveal-base-role-tag" class="role-tag base-role" hidden></span>
+          <div id="reveal-word" class="reveal-word"></div>
+          <div id="reveal-hint" class="reveal-hint"></div>
+          <span id="reveal-role-tag" class="role-tag" hidden></span>
+        </div>
+        <button type="button" id="reveal-hide-btn" class="btn btn-danger btn-block">Hide &amp; Pass</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════ SCREEN 3: GAME LOOP (VOTING) ═══════════════════════ -->
+  <section id="screen-game" class="screen">
+    <div class="brand">
+      <svg class="brand-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <circle cx="10" cy="10" r="7" fill="none" stroke="var(--success)" stroke-width="2.5"/>
+        <line x1="15.3" y1="15.3" x2="21" y2="21" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      <h1>Undercover</h1>
+      <span class="tag" id="round-tag"></span>
+    </div>
+
+    <div id="game-info" class="card">
+      <p id="game-info-text"></p>
+    </div>
+
+    <div id="vote-pass" class="stack">
+      <p id="vote-pass-text"></p>
+      <button type="button" id="vote-pass-btn" class="btn btn-primary btn-block">Tap to Vote</button>
+    </div>
+
+    <div id="vote-cast" class="stack" style="display:none;">
+      <h3 id="vote-cast-heading"></h3>
+      <ul id="vote-list" class="vote-list"></ul>
+    </div>
+
+    <div id="goddess-panel" class="stack card" style="display:none;">
+      <h2>Goddess of Justice</h2>
+      <p>The vote was tied. Pass the device to the Goddess to break the tie.</p>
+      <ul id="goddess-list" class="vote-list"></ul>
+    </div>
+
+    <div id="boomerang-panel" class="stack card" style="display:none;">
+      <h2>The Boomerang!</h2>
+      <p id="boomerang-text"></p>
+      <button type="button" id="boomerang-continue-btn" class="btn btn-primary btn-block">Continue</button>
+    </div>
+
+    <div id="no-elim-panel" class="stack card" style="display:none;">
+      <h2>No Elimination</h2>
+      <p id="no-elim-text"></p>
+      <button type="button" id="no-elim-continue-btn" class="btn btn-primary btn-block">Continue</button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════ SCREEN 4: ELIMINATION ACTIONS ═══════════════════════ -->
+  <section id="screen-elimination" class="screen">
+    <div class="brand">
+      <svg class="brand-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <circle cx="10" cy="10" r="7" fill="none" stroke="var(--success)" stroke-width="2.5"/>
+        <line x1="15.3" y1="15.3" x2="21" y2="21" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      <h1>Undercover</h1>
+    </div>
+
+    <div class="card stack">
+      <h2 id="elim-title"></h2>
+      <p id="elim-role-reveal"></p>
+    </div>
+
+    <div id="revenger-panel" class="stack card" style="display:none;">
+      <h2>The Revenger!</h2>
+      <p id="revenger-text"></p>
+      <ul id="revenger-list" class="vote-list"></ul>
+    </div>
+
+    <div id="lovers-panel" class="stack card" style="display:none;">
+      <h2>Broken Heart</h2>
+      <p id="lovers-text"></p>
+      <button type="button" id="lovers-continue-btn" class="btn btn-primary btn-block">Continue</button>
+    </div>
+
+    <div id="mrwhite-guess-panel" class="stack card" style="display:none;">
+      <h2>Mr. White's Final Guess</h2>
+      <p>If this player correctly names the Civilians' word, Mr. White wins instantly.</p>
+      <input type="text" id="mrwhite-guess-input" placeholder="Type the Civilian word" autocomplete="off">
+      <button type="button" id="mrwhite-guess-btn" class="btn btn-primary btn-block">Submit Guess</button>
+    </div>
+
+    <div id="mrwhite-guess-result-panel" class="stack card" style="display:none;">
+      <div id="mrwhite-guess-result-banner" class="banner neutral"></div>
+      <button type="button" id="mrwhite-guess-result-continue-btn" class="btn btn-primary btn-block">Continue</button>
+    </div>
+
+    <div id="elim-continue-wrap" style="display:none;">
+      <button type="button" id="elim-continue-btn" class="btn btn-primary btn-block">Continue</button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════ SCREEN 5: GAME OVER ═══════════════════════ -->
+  <section id="screen-gameover" class="screen">
+    <div class="brand">
+      <svg class="brand-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <circle cx="10" cy="10" r="7" fill="none" stroke="var(--success)" stroke-width="2.5"/>
+        <line x1="15.3" y1="15.3" x2="21" y2="21" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      <h1>Undercover</h1>
+    </div>
+    <div id="gameover-banner" class="banner neutral"></div>
+
+    <div class="card stack">
+      <h2>Secret Words</h2>
+      <p id="gameover-words"></p>
+    </div>
+
+    <div class="card">
+      <h2>Results</h2>
+      <div style="overflow-x:auto;">
+        <table class="score-table" id="score-table">
+          <thead>
+            <tr><th>Player</th><th>Role</th><th>+/-</th><th>Total</th></tr>
+          </thead>
+          <tbody id="score-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <button type="button" id="play-again-btn" class="btn btn-primary btn-block">Play Again</button>
+  </section>
+
+  <p class="footer-note">Undercover &mdash; a pass-and-play social deduction game.</p>
+</div>
+
+<!-- Confirm dialog (used for vote confirmation) -->
+<div id="confirm-overlay" class="overlay">
+  <div class="dialog">
+    <h3 id="confirm-title">Confirm</h3>
+    <p id="confirm-text"></p>
+    <div class="actions">
+      <button type="button" id="confirm-cancel-btn" class="btn btn-ghost">Cancel</button>
+      <button type="button" id="confirm-ok-btn" class="btn btn-primary">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="scoring.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SECTION: STATE
+  // ═══════════════════════════════════════════════════════════════════
+
+  var SCREENS = {
+    SETUP: 'screen-setup',
+    REVEAL: 'screen-reveal',
+    GAME: 'screen-game',
+    ELIMINATION: 'screen-elimination',
+    GAMEOVER: 'screen-gameover'
+  };
+
+  var state = {
+    screen: SCREENS.SETUP,
+    phase: null, // sub-phase within a screen
+
+    // words
+    wordsStatus: 'loading', // 'loading' | 'ready' | 'error'
+    wordsError: '',
+    wordPairs: [], // [ [civilian, undercover], ... ]
+    usedPairIndices: [],
+    lastPairIndex: -1,
+    currentPair: null, // [civilianWord, undercoverWord]
+
+    // setup config
+    players: [], // { id, name, score }
+    undercoverCount: 1,
+    mrWhiteCount: 0, // 0 = no Mr. White in play
+    specialsEnabled: false,
+    // Number of players who should be dealt each modifier. LOVER is counted in *pairs*
+    // (each pair links two distinct players), all others count individual players.
+    roleCounts: { JOYFUL_FOOL: 0, MIME: 0, LOVER: 0, REVENGER: 0, GODDESS: 0, BOOMERANG: 0 },
+
+    // in-game player state (built at game start)
+    gamePlayers: [], // { id, name, baseRole, modifiers[], word, alive, lover, score, flags:{boomerangUsed}, roundsSurvived }
+
+    // reveal
+    revealIndex: 0,
+    revealShown: false,
+
+    // round / voting
+    round: 0,
+    startingPlayerId: null,
+    votingOrder: [],
+    voterIndex: 0,
+    votes: {}, // voterId -> targetId
+    selectedTarget: null,
+    firstVoteOutDone: false,
+    firstVoteOutPlayerId: null,
+
+    // elimination cascade
+    pendingEliminations: [], // queue of { id, cause: 'VOTE'|'REVENGER'|'LOVER' }
+    processedEliminationIds: [],
+    currentElimination: null, // player object currently being processed on screen 4
+    mrWhiteGuessResult: null, // { correct: boolean, outcome?: object } while showing the guess result
+    eliminationCauseById: {},
+
+    // misc
+    lastEliminatedForGoddess: null,
+    boomerangDeflectedPlayerName: null,
+    noElimReason: '',
+    gameOverOutcome: null,
+    roundDeltas: [], // last game's point deltas
+    idCounter: 1
+  };
+
+  var ROLE_LABELS = {
+    JOYFUL_FOOL: 'Joyful Fool',
+    MIME: 'Mr. Mime',
+    LOVER: 'Lover',
+    REVENGER: 'Revenger',
+    GODDESS: 'Goddess of Justice',
+    BOOMERANG: 'Boomerang'
+  };
+
+  /**
+   * Human-readable label for a player's modifier. For LOVER, includes the linked
+   * partner's name (falling back to the plain label if the partner can't be resolved).
+   */
+  function modifierLabel(player, modifier) {
+    if (modifier === 'LOVER' && player.lover) {
+      var partner = getPlayer(player.lover);
+      if (partner) return 'Lover of ' + partner.name;
+    }
+    return ROLE_LABELS[modifier];
+  }
+
+  function nextId() {
+    return 'p' + (state.idCounter++);
+  }
+
+  function announce(msg) {
+    var el = document.getElementById('announcer');
+    el.textContent = '';
+    // Force re-announcement even if the text is identical to before.
+    window.setTimeout(function () { el.textContent = msg; }, 30);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SECTION: WORD LOADING & PARSING
+  // ═══════════════════════════════════════════════════════════════════
+
+  /**
+   * Parse the raw contents of words.txt into an array of [civilian, undercover] pairs.
+   * Pure function: no DOM/network access, safe to unit test independently.
+   * @param {string} text
+   * @returns {{ pairs: Array<[string,string]>, warnings: string[] }}
+   */
+  function parseWordLines(text) {
+    var pairs = [];
+    var warnings = [];
+    var lines = text.split(/\r?\n/);
+
+    for (var i = 0; i < lines.length; i++) {
+      var raw = lines[i];
+      var line = raw.trim();
+      if (line === '' || line.charAt(0) === '#') continue;
+
+      var parsed = tryParseLine(line);
+      if (!parsed) {
+        warnings.push('Skipped malformed line ' + (i + 1) + ': ' + raw);
+        continue;
+      }
+
+      if (!Array.isArray(parsed) || parsed.length < 2 ||
+          typeof parsed[0] !== 'string' || typeof parsed[1] !== 'string' ||
+          parsed[0].trim() === '' || parsed[1].trim() === '') {
+        warnings.push('Skipped invalid line ' + (i + 1) + ' (need 2 non-empty strings): ' + raw);
+        continue;
+      }
+
+      pairs.push([parsed[0].trim(), parsed[1].trim()]);
+    }
+
+    return { pairs: pairs, warnings: warnings };
+  }
+
+  function tryParseLine(line) {
+    try {
+      return JSON.parse(line);
+    } catch (e) {
+      // Retry after normalizing smart quotes and stripping stray quote characters.
+      var normalized = line
+        .replace(/[“”]/g, '"')
+        .replace(/[‘’]/g, "'");
+      try {
+        return JSON.parse(normalized);
+      } catch (e2) {
+        return null;
+      }
+    }
+  }
+
+  function loadWords() {
+    fetch('./words.txt')
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.text();
+      })
+      .then(function (text) {
+        var result = parseWordLines(text);
+        for (var i = 0; i < result.warnings.length; i++) {
+          console.warn('[words.txt] ' + result.warnings[i]);
+        }
+        if (result.pairs.length === 0) {
+          state.wordsStatus = 'error';
+          state.wordsError = 'words.txt loaded but contained no valid word pairs.';
+        } else {
+          state.wordsStatus = 'ready';
+          state.wordPairs = result.pairs;
+        }
+        render();
+      })
+      .catch(function (err) {
+        state.wordsStatus = 'error';
+        state.wordsError = describeFetchError(err);
+        render();
+      });
+  }
+
+  function describeFetchError(err) {
+    var isFileProtocol = window.location.protocol === 'file:';
+    if (isFileProtocol) {
+      return 'Could not load words.txt because the page was opened directly from disk ' +
+        '(file://). Browsers block fetch() requests for local files. Fix: serve this folder ' +
+        'over HTTP, e.g. run "python3 -m http.server" and open http://localhost:8000, or ' +
+        'deploy it to GitHub Pages (which serves over HTTPS and works).';
+    }
+    return 'Could not load words.txt (' + (err && err.message ? err.message : 'unknown error') +
+      '). Make sure words.txt is present alongside index.html and the page is served over ' +
+      'HTTP/HTTPS, e.g. via "python3 -m http.server" or GitHub Pages.';
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SECTION: SETUP SCREEN LOGIC
+  // ═══════════════════════════════════════════════════════════════════
+
+  function autoScaleDefaults(n) {
+    // Suggested defaults from the spec table; host can still override via steppers.
+    if (n <= 3) return { undercover: 1, mrWhite: 0 };
+    if (n <= 5) return { undercover: 1, mrWhite: n >= 5 ? 1 : 0 };
+    if (n <= 7) return { undercover: 2, mrWhite: 1 };
+    return { undercover: 2, mrWhite: 1 };
+  }
+
+  function applyAutoScaleIfUntouched() {
+    var n = state.players.length;
+    if (n === 0) return;
+    var d = autoScaleDefaults(n);
+    state.undercoverCount = clamp(d.undercover, 1, Math.max(1, n - 2));
+    state.mrWhiteCount = d.mrWhite;
+  }
+
+  function clamp(v, min, max) {
+    return Math.max(min, Math.min(max, v));
+  }
+
+  function addPlayer(name) {
+    name = name.trim();
+    if (!name) return;
+    state.players.push({ id: nextId(), name: name, score: 0 });
+    applyAutoScaleIfUntouched();
+    render();
+  }
+
+  function removePlayer(id) {
+    state.players = state.players.filter(function (p) { return p.id !== id; });
+    applyAutoScaleIfUntouched();
+    render();
+  }
+
+  function maxUndercovers() {
+    // Civilian majority must be preserved: civilians = n - undercovers - mrWhite > undercovers + mrWhite
+    var n = state.players.length;
+    var mw = state.mrWhiteCount;
+    var maxU = Math.floor((n - mw - 1) / 2);
+    return Math.max(1, maxU);
+  }
+
+  function maxMrWhite() {
+    // Civilian majority must be preserved: civilians = n - undercovers - mrWhite > undercovers + mrWhite
+    // n - u - mw > u + mw  =>  n - 2u > 2mw  =>  mw < (n - 2u) / 2
+    var n = state.players.length;
+    var limit = Math.floor((n - 2 * state.undercoverCount - 1) / 2);
+    return Math.max(0, limit);
+  }
+
+  function validRoleCounts() {
+    var n = state.players.length;
+    if (n < 3) return false;
+    var u = state.undercoverCount;
+    var mw = state.mrWhiteCount;
+    var civilians = n - u - mw;
+    if (u < 1) return false;
+    if (mw < 0) return false;
+    if (civilians <= u + mw) return false; // civilian majority required
+    if (civilians < 1) return false;
+    return true;
+  }
+
+  function loversAvailable() {
+    return state.players.length >= 5;
+  }
+
+  function maxRoleCount(role) {
+    var n = state.players.length;
+    if (role === 'LOVER') {
+      return loversAvailable() ? Math.floor(n / 2) : 0;
+    }
+    if (role === 'MIME') {
+      // Mr. Mime can never be assigned to Mr. White.
+      return Math.max(0, n - state.mrWhiteCount);
+    }
+    return n;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SECTION: ROLE ASSIGNMENT & GAME START
+  // ═══════════════════════════════════════════════════════════════════
+
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  function pickWordPair() {
+    var n = state.wordPairs.length;
+    if (n === 0) return null;
+    if (n === 1) return { pair: state.wordPairs[0], index: 0 };
+
+    var candidates = [];
+    for (var i = 0; i < n; i++) {
+      if (i !== state.lastPairIndex) candidates.push(i);
+    }
+    if (candidates.length === 0) candidates = [0];
+    var idx = candidates[Math.floor(Math.random() * candidates.length)];
+    return { pair: state.wordPairs[idx], index: idx };
+  }
+
+  function startGame() {
+    var picked = pickWordPair();
+    state.currentPair = picked.pair;
+    state.lastPairIndex = picked.index;
+
+    var civilianWord = picked.pair[0];
+    var undercoverWord = picked.pair[1];
+
+    var order = shuffle(state.players.map(function (p) { return p.id; }));
+    var n = order.length;
+    var uCount = state.undercoverCount;
+    var mwCount = state.mrWhiteCount;
+
+    var roleById = {};
+    for (var i = 0; i < n; i++) {
+      if (i < uCount) roleById[order[i]] = 'UNDERCOVER';
+      else if (i < uCount + mwCount) roleById[order[i]] = 'MR_WHITE';
+      else roleById[order[i]] = 'CIVILIAN';
+    }
+
+    var gamePlayers = state.players.map(function (p) {
+      var role = roleById[p.id];
+      var word = role === 'CIVILIAN' ? civilianWord : role === 'UNDERCOVER' ? undercoverWord : null;
+      return {
+        id: p.id,
+        name: p.name,
+        baseRole: role,
+        modifiers: [],
+        word: word,
+        alive: true,
+        lover: null,
+        score: p.score,
+        flags: { boomerangUsed: false },
+        roundsSurvived: 0
+      };
+    });
+
+    assignModifiers(gamePlayers);
+
+    state.gamePlayers = gamePlayers;
+    state.revealIndex = 0;
+    state.revealShown = false;
+    state.round = 0;
+    state.firstVoteOutDone = false;
+    state.firstVoteOutPlayerId = null;
+    state.pendingEliminations = [];
+    state.processedEliminationIds = [];
+    state.eliminationCauseById = {};
+    state.gameOverOutcome = null;
+    state.roundDeltas = [];
+
+    state.screen = SCREENS.REVEAL;
+    render();
+  }
+
+  /**
+   * Deal out the configured special-role counts to players, round-robin fair: every player
+   * receives at most one modifier before any player receives a second one (and so on for a
+   * third, etc). Lovers are dealt first since each pair must consume two distinct, still
+   * un-linked players; remaining single-player roles are then dealt from a shuffled pool,
+   * always preferring whichever eligible player currently holds the fewest modifiers.
+   */
+  function assignModifiers(gamePlayers) {
+    if (!state.specialsEnabled) return;
+    var counts = state.roleCounts;
+
+    // Lovers: each pair links two distinct, not-yet-linked players (needs 5+ players).
+    if (counts.LOVER > 0 && gamePlayers.length >= 5) {
+      var pairsToAssign = Math.min(counts.LOVER, Math.floor(gamePlayers.length / 2));
+      for (var i = 0; i < pairsToAssign; i++) {
+        var eligible = gamePlayers.filter(function (p) { return !p.lover; });
+        if (eligible.length < 2) break;
+        var ordered = fewestModifiersFirst(eligible);
+        var a = ordered[0];
+        var b = ordered[1];
+        a.modifiers.push('LOVER');
+        b.modifiers.push('LOVER');
+        a.lover = b.id;
+        b.lover = a.id;
+      }
+    }
+
+    // Single-player roles: build a flat pool of role tokens and shuffle their assignment
+    // order too, so which role "goes first" into the round-robin is also randomized.
+    var singleRoles = ['JOYFUL_FOOL', 'MIME', 'REVENGER', 'GODDESS', 'BOOMERANG'];
+    var slots = [];
+    singleRoles.forEach(function (role) {
+      var n = counts[role] || 0;
+      for (var j = 0; j < n; j++) slots.push(role);
+    });
+    slots = shuffle(slots);
+
+    slots.forEach(function (role) {
+      var eligible = gamePlayers.filter(function (p) {
+        if (role === 'MIME' && p.baseRole === 'MR_WHITE') return false;
+        if (p.modifiers.indexOf(role) !== -1) return false; // no duplicate same role
+        return true;
+      });
+      if (eligible.length === 0) return; // no eligible player left for this slot; skip it
+      var ordered = fewestModifiersFirst(eligible);
+      ordered[0].modifiers.push(role);
+    });
+  }
+
+  /**
+   * Returns `players` shuffled, then stably sorted by current modifier count ascending —
+   * so the player(s) with the fewest modifiers so far come first, with random tie-breaks.
+   */
+  function fewestModifiersFirst(players) {
+    var shuffled = shuffle(players);
+    shuffled.sort(function (a, b) { return a.modifiers.length - b.modifiers.length; });
+    return shuffled;
+  }
+
+  function pickRandom(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SECTION: REVEAL SCREEN
+  // ═══════════════════════════════════════════════════════════════════
+
+  function currentRevealPlayer() {
+    return state.gamePlayers[state.revealIndex];
+  }
+
+  function revealTap() {
+    state.revealShown = true;
+    render();
+  }
+
+  function revealHideAndPass() {
+    state.revealShown = false;
+    state.revealIndex++;
+    if (state.revealIndex >= state.gamePlayers.length) {
+      beginGameLoop();
+    } else {
+      render();
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SECTION: GAME LOOP (VOTING)
+  // ═══════════════════════════════════════════════════════════════════
+
+  function livingPlayers() {
+    return state.gamePlayers.filter(function (p) { return p.alive; });
+  }
+
+  function getPlayer(id) {
+    for (var i = 0; i < state.gamePlayers.length; i++) {
+      if (state.gamePlayers[i].id === id) return state.gamePlayers[i];
+    }
+    return null;
+  }
+
+  function beginGameLoop() {
+    state.round = 1;
+    var living = livingPlayers();
+    state.startingPlayerId = pickRandom(living).id;
+    announce(getPlayer(state.startingPlayerId).name + ' will start the discussion this round.');
+    startVotingRound();
+  }
+
+  function startVotingRound() {
+    var living = livingPlayers();
+    // Voting order starts with the starting player, wraps around.
+    var startIdx = living.findIndex(function (p) { return p.id === state.startingPlayerId; });
+    if (startIdx === -1) startIdx = 0;
+    var order = living.slice(startIdx).concat(living.slice(0, startIdx));
+    state.votingOrder = order.map(function (p) { return p.id; });
+    state.voterIndex = 0;
+    state.votes = {};
+    state.selectedTarget = null;
+    state.phase = 'VOTE_PASS';
+    state.screen = SCREENS.GAME;
+    render();
+  }
+
+  function currentVoter() {
+    var id = state.votingOrder[state.voterIndex];
+    return getPlayer(id);
+  }
+
+  function beginVoteCast() {
+    state.phase = 'VOTE_CAST';
+    state.selectedTarget = null;
+    render();
+  }
+
+  function selectVoteTarget(targetId) {
+    state.selectedTarget = targetId;
+    render();
+  }
+
+  function confirmVote() {
+    var voter = currentVoter();
+    state.votes[voter.id] = state.selectedTarget;
+    state.voterIndex++;
+    if (state.voterIndex >= state.votingOrder.length) {
+      tallyVotes();
+    } else {
+      state.phase = 'VOTE_PASS';
+      state.selectedTarget = null;
+      render();
+    }
+  }
+
+  function tallyVotes() {
+    var counts = {};
+    Object.keys(state.votes).forEach(function (voterId) {
+      var target = state.votes[voterId];
+      counts[target] = (counts[target] || 0) + 1;
+    });
+
+    var maxCount = 0;
+    Object.keys(counts).forEach(function (id) {
+      if (counts[id] > maxCount) maxCount = counts[id];
+    });
+    var topTargets = Object.keys(counts).filter(function (id) { return counts[id] === maxCount; });
+
+    if (topTargets.length > 1) {
+      // Tie.
+      if (state.specialsEnabled && findGoddess()) {
+        state.lastEliminatedForGoddess = topTargets;
+        state.phase = 'GODDESS_TIEBREAK';
+        render();
+        return;
+      } else {
+        state.noElimReason = 'The vote was tied and there is no Goddess of Justice to break it. No one is eliminated this round.';
+        state.phase = 'NO_ELIMINATION';
+        render();
+        return;
+      }
+    }
+
+    proceedToEliminationTarget(topTargets[0]);
+  }
+
+  function findGoddess() {
+    return state.gamePlayers.filter(function (p) {
+      return p.modifiers.indexOf('GODDESS') !== -1;
+    })[0] || null;
+  }
+
+  function goddessBreakTie(targetId) {
+    proceedToEliminationTarget(targetId);
+  }
+
+  function proceedToEliminationTarget(targetId) {
+    var target = getPlayer(targetId);
+
+    // Boomerang: first time this player would be eliminated by majority vote, deflect it.
+    if (target.modifiers.indexOf('BOOMERANG') !== -1 && !target.flags.boomerangUsed) {
+      target.flags.boomerangUsed = true;
+      state.boomerangDeflectedPlayerName = target.name;
+      state.phase = 'BOOMERANG_DEFLECT';
+      render();
+      return;
+    }
+
+    // Real vote-out.
+    state.pendingEliminations = [{ id: targetId, cause: 'VOTE' }];
+    state.processedEliminationIds = [];
+    goToElimination();
+  }
+
+  function acknowledgeBoomerang() {
+    state.noElimReason = state.boomerangDeflectedPlayerName + "'s Boomerang deflected the vote! No one is eliminated this round.";
+    state.boomerangDeflectedPlayerName = null;
+    state.phase = 'NO_ELIMINATION';
+    render();
+  }
+
+  function acknowledgeNoElimination() {
+    endRoundAndContinue();
+  }
+
+  function endRoundAndContinue() {
+    // Track rounds survived for the optional bonus.
+    livingPlayers().forEach(function (p) { p.roundsSurvived++; });
+
+    var outcome = window.Undercover.checkWinCondition({ players: state.gamePlayers });
+    if (outcome.over) {
+      finishGame(outcome);
+      return;
+    }
+
+    state.round++;
+    // Next round's starting player: the player after the previous starting player among the living.
+    var living = livingPlayers();
+    var prevIdx = living.findIndex(function (p) { return p.id === state.startingPlayerId; });
+    var nextStart = prevIdx === -1 ? living[0] : living[(prevIdx + 1) % living.length];
+    state.startingPlayerId = nextStart ? nextStart.id : (living[0] && living[0].id);
+    startVotingRound();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SECTION: ELIMINATION RESOLUTION (SCREEN 4)
+  // ═══════════════════════════════════════════════════════════════════
+
+  function goToElimination() {
+    state.screen = SCREENS.ELIMINATION;
+    processNextElimination();
+  }
+
+  function processNextElimination() {
+    // Find next queued elimination not yet processed.
+    var next = null;
+    for (var i = 0; i < state.pendingEliminations.length; i++) {
+      var e = state.pendingEliminations[i];
+      if (state.processedEliminationIds.indexOf(e.id) === -1) {
+        var p = getPlayer(e.id);
+        if (p && p.alive) { next = e; break; }
+        // Already dead (e.g. double-queued) — mark processed and continue scanning.
+        state.processedEliminationIds.push(e.id);
+      }
+    }
+
+    if (!next) {
+      settleAfterCascade();
+      return;
+    }
+
+    var player = getPlayer(next.id);
+    player.alive = false;
+    state.processedEliminationIds.push(next.id);
+    state.eliminationCauseById[next.id] = next.cause;
+    state.currentElimination = { player: player, cause: next.cause };
+
+    if (next.cause === 'VOTE' && !state.firstVoteOutDone) {
+      state.firstVoteOutDone = true;
+      state.firstVoteOutPlayerId = next.id;
+    }
+
+    state.phase = 'REVEAL_ROLE';
+    render();
+  }
+
+  function elimContinueFromReveal() {
+    var elim = state.currentElimination;
+    var player = elim.player;
+    var cause = elim.cause;
+
+    // Revenger triggers only on an actual vote-out.
+    if (cause === 'VOTE' && player.modifiers.indexOf('REVENGER') !== -1) {
+      state.phase = 'REVENGER_PICK';
+      render();
+      return;
+    }
+
+    checkLoversForCurrent();
+  }
+
+  function revengerChoose(targetId) {
+    state.pendingEliminations.push({ id: targetId, cause: 'REVENGER' });
+    checkLoversForCurrent();
+  }
+
+  function checkLoversForCurrent() {
+    var elim = state.currentElimination;
+    var player = elim.player;
+
+    if (player.modifiers.indexOf('LOVER') !== -1 && player.lover) {
+      var partner = getPlayer(player.lover);
+      if (partner && partner.alive) {
+        var alreadyQueued = state.pendingEliminations.some(function (e) { return e.id === partner.id; });
+        if (!alreadyQueued) {
+          state.pendingEliminations.push({ id: partner.id, cause: 'LOVER' });
+          state.phase = 'LOVERS_BROKEN';
+          render();
+          return;
+        }
+      }
+    }
+
+    afterLoversCheck();
+  }
+
+  function loversContinue() {
+    afterLoversCheck();
+  }
+
+  function afterLoversCheck() {
+    var elim = state.currentElimination;
+    if (elim.player.baseRole === 'MR_WHITE') {
+      state.phase = 'MR_WHITE_GUESS';
+      render();
+      return;
+    }
+    processNextElimination();
+  }
+
+  function submitMrWhiteGuess(guess) {
+    var civilianWord = state.currentPair[0];
+    var correct = window.Undercover.checkMrWhiteGuess(guess, civilianWord);
+    state.mrWhiteGuessResult = { correct: correct };
+    if (correct) {
+      state.mrWhiteGuessResult.outcome = {
+        over: true,
+        winningTeam: 'MR_WHITE',
+        reason: 'Mr. White correctly guessed the Civilian word.',
+        mrWhiteGuessedCorrectly: true,
+        mrWhiteId: state.currentElimination.player.id
+      };
+    }
+    state.phase = 'MR_WHITE_GUESS_RESULT';
+    render();
+  }
+
+  function acknowledgeMrWhiteGuessResult() {
+    var result = state.mrWhiteGuessResult;
+    state.mrWhiteGuessResult = null;
+    if (result.correct) {
+      finishGame(result.outcome);
+      return;
+    }
+    processNextElimination();
+  }
+
+  function settleAfterCascade() {
+    var outcome = window.Undercover.checkWinCondition({ players: state.gamePlayers });
+    if (outcome.over) {
+      finishGame(outcome);
+      return;
+    }
+    // No winner yet: go back to the game loop for the next round.
+    endRoundAndContinue();
+  }
+
+  function finishGame(outcome) {
+    state.gameOverOutcome = outcome;
+    var deltas = window.Undercover.distributePoints(
+      { players: state.gamePlayers, firstVoteOutPlayerId: state.firstVoteOutPlayerId },
+      outcome
+    );
+    state.roundDeltas = deltas;
+
+    var deltaByPlayer = {};
+    deltas.forEach(function (d) {
+      deltaByPlayer[d.playerId] = (deltaByPlayer[d.playerId] || 0) + d.delta;
+    });
+
+    state.gamePlayers.forEach(function (gp) {
+      var delta = deltaByPlayer[gp.id] || 0;
+      gp.score += delta;
+      var setupPlayer = state.players.filter(function (p) { return p.id === gp.id; })[0];
+      if (setupPlayer) setupPlayer.score = gp.score;
+    });
+
+    state.screen = SCREENS.GAMEOVER;
+    render();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SECTION: PLAY AGAIN
+  // ═══════════════════════════════════════════════════════════════════
+
+  function playAgain() {
+    // Keep players + cumulative scores; return to setup so host can adjust specials/counts.
+    state.gamePlayers = [];
+    state.revealIndex = 0;
+    state.round = 0;
+    state.screen = SCREENS.SETUP;
+    render();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SECTION: RENDER
+  // ═══════════════════════════════════════════════════════════════════
+
+  function render() {
+    Object.keys(SCREENS).forEach(function (key) {
+      var el = document.getElementById(SCREENS[key]);
+      el.classList.toggle('active', state.screen === SCREENS[key]);
+    });
+
+    if (state.screen === SCREENS.SETUP) renderSetup();
+    else if (state.screen === SCREENS.REVEAL) renderReveal();
+    else if (state.screen === SCREENS.GAME) renderGame();
+    else if (state.screen === SCREENS.ELIMINATION) renderElimination();
+    else if (state.screen === SCREENS.GAMEOVER) renderGameOver();
+  }
+
+  function renderSetup() {
+    var list = document.getElementById('player-list');
+    list.innerHTML = '';
+    state.players.forEach(function (p) {
+      var li = document.createElement('li');
+      var nameSpan = document.createElement('span');
+      nameSpan.className = 'name';
+      nameSpan.textContent = p.name + (p.score ? ' (' + p.score + ' pts)' : '');
+      var removeBtn = document.createElement('button');
+      removeBtn.className = 'remove-btn';
+      removeBtn.type = 'button';
+      removeBtn.setAttribute('aria-label', 'Remove ' + p.name);
+      removeBtn.textContent = '✕';
+      removeBtn.addEventListener('click', function () { removePlayer(p.id); });
+      li.appendChild(nameSpan);
+      li.appendChild(removeBtn);
+      list.appendChild(li);
+    });
+    document.getElementById('player-count-label').textContent =
+      state.players.length + ' player' + (state.players.length === 1 ? '' : 's') +
+      (state.players.length < 3 ? ' (need at least 3)' : '');
+
+    // Keep Undercover/Mr. White counts pinned inside their valid range at all times so the
+    // displayed numbers always match what will actually be assigned when the game starts.
+    var maxU = maxUndercovers();
+    state.undercoverCount = clamp(state.undercoverCount, 1, maxU);
+    var maxMw = maxMrWhite();
+    state.mrWhiteCount = clamp(state.mrWhiteCount, 0, maxMw);
+
+    document.getElementById('undercover-value').textContent = state.undercoverCount;
+    document.getElementById('undercover-minus').disabled = state.undercoverCount <= 1;
+    document.getElementById('undercover-plus').disabled = state.undercoverCount >= maxU;
+
+    document.getElementById('mrwhite-value').textContent = state.mrWhiteCount;
+    document.getElementById('mrwhite-minus').disabled = state.mrWhiteCount <= 0;
+    document.getElementById('mrwhite-plus').disabled = state.mrWhiteCount >= maxMw;
+
+    var n = state.players.length;
+    var mw = state.mrWhiteCount;
+    var civilians = n - state.undercoverCount - mw;
+    var summary = document.getElementById('role-summary');
+    if (n >= 3) {
+      summary.textContent = civilians + ' Civilian' + (civilians === 1 ? '' : 's') + ', ' +
+        state.undercoverCount + ' Undercover' + (state.undercoverCount === 1 ? '' : 's') +
+        (mw > 0 ? ', ' + mw + ' Mr. White' + (mw === 1 ? '' : 's') : '') +
+        (!validRoleCounts() ? ' — invalid: Civilians must be the majority.' : '');
+    } else {
+      summary.textContent = '';
+    }
+
+    document.getElementById('specials-enabled').checked = state.specialsEnabled;
+    document.getElementById('specials-list').hidden = !state.specialsEnabled;
+
+    if (!loversAvailable()) {
+      state.roleCounts.LOVER = 0;
+    }
+    document.getElementById('lovers-desc').textContent = loversAvailable()
+      ? 'Pairs of linked players'
+      : 'Pairs of linked players (needs 5+ players — disabled)';
+
+    document.querySelectorAll('#specials-list .stepper[data-role]').forEach(function (stepperEl) {
+      var role = stepperEl.getAttribute('data-role');
+      var max = maxRoleCount(role);
+      var value = clamp(state.roleCounts[role] || 0, 0, max);
+      state.roleCounts[role] = value;
+      stepperEl.querySelector('.role-value').textContent = value;
+      stepperEl.querySelector('.role-minus').disabled = value <= 0;
+      stepperEl.querySelector('.role-plus').disabled = value >= max;
+    });
+
+    var statusEl = document.getElementById('word-status');
+    var errorEl = document.getElementById('setup-error');
+    if (state.wordsStatus === 'loading') {
+      statusEl.textContent = 'Loading words…';
+      statusEl.className = 'status-line';
+      errorEl.hidden = true;
+    } else if (state.wordsStatus === 'ready') {
+      statusEl.textContent = state.wordPairs.length + ' word pairs ready';
+      statusEl.className = 'status-line ready';
+      errorEl.hidden = true;
+    } else {
+      statusEl.textContent = 'Failed to load words';
+      statusEl.className = 'status-line error';
+      errorEl.hidden = false;
+      errorEl.innerHTML = '<strong>Cannot load words.txt.</strong><br>' + escapeHtml(state.wordsError);
+    }
+
+    var startBtn = document.getElementById('start-game-btn');
+    startBtn.disabled = !(state.wordsStatus === 'ready' && validRoleCounts());
+  }
+
+  function renderReveal() {
+    var player = currentRevealPlayer();
+    var passWrap = document.getElementById('reveal-pass');
+    var shownWrap = document.getElementById('reveal-shown');
+
+    if (!player) return;
+
+    if (!state.revealShown) {
+      passWrap.style.display = 'flex';
+      shownWrap.style.display = 'none';
+      document.getElementById('reveal-pass-name').textContent = player.name;
+    } else {
+      passWrap.style.display = 'none';
+      shownWrap.style.display = 'flex';
+      document.getElementById('reveal-shown-name').textContent = player.name;
+
+      var wordEl = document.getElementById('reveal-word');
+      var hintEl = document.getElementById('reveal-hint');
+      var tagEl = document.getElementById('reveal-role-tag');
+      var baseRoleTagEl = document.getElementById('reveal-base-role-tag');
+
+      if (player.baseRole === 'MR_WHITE') {
+        baseRoleTagEl.hidden = false;
+        baseRoleTagEl.textContent = 'You are Mr. White';
+        wordEl.textContent = 'You have no word';
+        hintEl.textContent = 'Blend in and try to figure out the secret word from the discussion.';
+      } else {
+        baseRoleTagEl.hidden = true;
+        baseRoleTagEl.textContent = '';
+        wordEl.textContent = player.word;
+        hintEl.textContent = 'Remember this word. Don’t say it out loud!';
+      }
+
+      var tags = [];
+      if (player.modifiers.indexOf('MIME') !== -1) {
+        tags.push('Mr. Mime — act out your word with gestures only');
+      }
+      if (player.modifiers.indexOf('JOYFUL_FOOL') !== -1) tags.push('Joyful Fool');
+      if (player.modifiers.indexOf('LOVER') !== -1) {
+        var partner = player.lover ? getPlayer(player.lover) : null;
+        tags.push(partner ? 'Lover — linked with ' + partner.name : 'Lover');
+      }
+      if (player.modifiers.indexOf('REVENGER') !== -1) tags.push('Revenger');
+      if (player.modifiers.indexOf('GODDESS') !== -1) tags.push('Goddess of Justice');
+      if (player.modifiers.indexOf('BOOMERANG') !== -1) tags.push('Boomerang');
+
+      if (tags.length > 0) {
+        tagEl.hidden = false;
+        tagEl.textContent = tags.join(' • ');
+      } else {
+        tagEl.hidden = true;
+        tagEl.textContent = '';
+      }
+    }
+  }
+
+  function renderGame() {
+    document.getElementById('round-tag').textContent = 'Round ' + state.round;
+
+    var infoEl = document.getElementById('game-info-text');
+    var living = livingPlayers();
+    infoEl.textContent = living.length + ' players remaining. Discuss, then vote to eliminate.';
+
+    var passWrap = document.getElementById('vote-pass');
+    var castWrap = document.getElementById('vote-cast');
+    var goddessWrap = document.getElementById('goddess-panel');
+    var boomerangWrap = document.getElementById('boomerang-panel');
+    var noElimWrap = document.getElementById('no-elim-panel');
+
+    passWrap.style.display = 'none';
+    castWrap.style.display = 'none';
+    goddessWrap.style.display = 'none';
+    boomerangWrap.style.display = 'none';
+    noElimWrap.style.display = 'none';
+
+    if (state.phase === 'VOTE_PASS') {
+      passWrap.style.display = 'flex';
+      var voter = currentVoter();
+      document.getElementById('vote-pass-text').textContent =
+        'Pass the device to ' + voter.name + ' to cast their vote.';
+    } else if (state.phase === 'VOTE_CAST') {
+      castWrap.style.display = 'flex';
+      var v = currentVoter();
+      document.getElementById('vote-cast-heading').textContent = v.name + ', vote to eliminate:';
+      var ul = document.getElementById('vote-list');
+      ul.innerHTML = '';
+      livingPlayers().forEach(function (p) {
+        var li = document.createElement('li');
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn' + (state.selectedTarget === p.id ? ' selected' : '');
+        btn.textContent = p.name;
+        btn.addEventListener('click', function () {
+          selectVoteTarget(p.id);
+          openConfirm(
+            'Confirm vote',
+            v.name + ' votes to eliminate ' + p.name + '. Confirm?',
+            function () { confirmVote(); },
+            function () { state.selectedTarget = null; render(); }
+          );
+        });
+        li.appendChild(btn);
+        ul.appendChild(li);
+      });
+    } else if (state.phase === 'GODDESS_TIEBREAK') {
+      goddessWrap.style.display = 'flex';
+      var gl = document.getElementById('goddess-list');
+      gl.innerHTML = '';
+      state.lastEliminatedForGoddess.forEach(function (id) {
+        var p = getPlayer(id);
+        var li = document.createElement('li');
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn';
+        btn.textContent = p.name;
+        btn.addEventListener('click', function () {
+          openConfirm(
+            'Confirm decision',
+            'The Goddess of Justice eliminates ' + p.name + '. Confirm?',
+            function () { goddessBreakTie(p.id); },
+            function () {}
+          );
+        });
+        li.appendChild(btn);
+        gl.appendChild(li);
+      });
+    } else if (state.phase === 'BOOMERANG_DEFLECT') {
+      boomerangWrap.style.display = 'flex';
+      document.getElementById('boomerang-text').textContent =
+        state.boomerangDeflectedPlayerName + ' received the majority vote, but their Boomerang ' +
+        'power deflects it! They survive, and no one is eliminated this round. The power is now spent.';
+    } else if (state.phase === 'NO_ELIMINATION') {
+      noElimWrap.style.display = 'flex';
+      document.getElementById('no-elim-text').textContent = state.noElimReason;
+    }
+  }
+
+  function renderElimination() {
+    var elim = state.currentElimination;
+    if (!elim) return;
+    var player = elim.player;
+
+    document.getElementById('elim-title').textContent = player.name + ' has been eliminated';
+
+    var roleLabel = player.baseRole === 'CIVILIAN' ? 'Civilian' :
+      player.baseRole === 'UNDERCOVER' ? 'Undercover' : 'Mr. White';
+    var modLabels = player.modifiers.map(function (m) { return modifierLabel(player, m); }).join(', ');
+    document.getElementById('elim-role-reveal').textContent =
+      player.name + ' was a ' + roleLabel + (modLabels ? ' (' + modLabels + ')' : '') + '.';
+
+    var revengerWrap = document.getElementById('revenger-panel');
+    var loversWrap = document.getElementById('lovers-panel');
+    var mrWhiteWrap = document.getElementById('mrwhite-guess-panel');
+    var mrWhiteResultWrap = document.getElementById('mrwhite-guess-result-panel');
+    var continueWrap = document.getElementById('elim-continue-wrap');
+
+    revengerWrap.style.display = 'none';
+    loversWrap.style.display = 'none';
+    mrWhiteWrap.style.display = 'none';
+    mrWhiteResultWrap.style.display = 'none';
+    continueWrap.style.display = 'none';
+
+    if (state.phase === 'REVEAL_ROLE') {
+      continueWrap.style.display = 'block';
+      var btn = document.getElementById('elim-continue-btn');
+      btn.onclick = elimContinueFromReveal;
+    } else if (state.phase === 'REVENGER_PICK') {
+      revengerWrap.style.display = 'flex';
+      document.getElementById('revenger-text').textContent =
+        player.name + ' the Revenger chooses a player to eliminate as well:';
+      var rl = document.getElementById('revenger-list');
+      rl.innerHTML = '';
+      livingPlayers().forEach(function (p) {
+        var li = document.createElement('li');
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'btn';
+        b.textContent = p.name;
+        b.addEventListener('click', function () {
+          openConfirm(
+            'Confirm Revenger pick',
+            player.name + ' drags down ' + p.name + '. Confirm?',
+            function () { revengerChoose(p.id); },
+            function () {}
+          );
+        });
+        li.appendChild(b);
+        rl.appendChild(li);
+      });
+    } else if (state.phase === 'LOVERS_BROKEN') {
+      loversWrap.style.display = 'flex';
+      var partner = getPlayer(player.lover);
+      document.getElementById('lovers-text').textContent =
+        partner.name + ' was linked to ' + player.name + ' as Lovers, and is eliminated too.';
+      document.getElementById('lovers-continue-btn').onclick = loversContinue;
+    } else if (state.phase === 'MR_WHITE_GUESS') {
+      mrWhiteWrap.style.display = 'flex';
+      document.getElementById('mrwhite-guess-input').value = '';
+    } else if (state.phase === 'MR_WHITE_GUESS_RESULT') {
+      mrWhiteResultWrap.style.display = 'flex';
+      var resultBanner = document.getElementById('mrwhite-guess-result-banner');
+      if (state.mrWhiteGuessResult.correct) {
+        resultBanner.textContent = 'Correct! ' + player.name + ' guessed the Civilian word and Mr. White wins instantly!';
+        resultBanner.className = 'banner win';
+      } else {
+        resultBanner.textContent = 'Wrong guess. ' + player.name + ' did not guess the Civilian word. Play continues.';
+        resultBanner.className = 'banner lose';
+      }
+      document.getElementById('mrwhite-guess-result-continue-btn').onclick = acknowledgeMrWhiteGuessResult;
+    }
+  }
+
+  function renderGameOver() {
+    var outcome = state.gameOverOutcome;
+    var banner = document.getElementById('gameover-banner');
+    var teamLabel = outcome.winningTeam === 'CIVILIANS' ? 'Civilians Win!' :
+      outcome.winningTeam === 'UNDERCOVERS' ? 'Undercovers Win!' : 'Mr. White Wins!';
+    banner.textContent = teamLabel;
+    banner.className = 'banner ' + (outcome.winningTeam === 'CIVILIANS' ? 'win' : 'lose');
+
+    document.getElementById('gameover-words').textContent =
+      'Civilian word: "' + state.currentPair[0] + '"  •  Undercover word: "' + state.currentPair[1] + '"';
+
+    var deltaByPlayer = {};
+    state.roundDeltas.forEach(function (d) {
+      deltaByPlayer[d.playerId] = (deltaByPlayer[d.playerId] || 0) + d.delta;
+    });
+
+    var tbody = document.getElementById('score-table-body');
+    tbody.innerHTML = '';
+    state.gamePlayers.forEach(function (p) {
+      var roleLabel = p.baseRole === 'CIVILIAN' ? 'Civilian' :
+        p.baseRole === 'UNDERCOVER' ? 'Undercover' : 'Mr. White';
+      var mods = p.modifiers.map(function (m) { return modifierLabel(p, m); }).join(', ');
+      var tr = document.createElement('tr');
+      var delta = deltaByPlayer[p.id] || 0;
+      tr.innerHTML =
+        '<td>' + escapeHtml(p.name) + (p.alive ? '' : ' †') + '</td>' +
+        '<td>' + roleLabel + (mods ? ' (' + escapeHtml(mods) + ')' : '') + '</td>' +
+        '<td>' + (delta > 0 ? '+' : '') + delta + '</td>' +
+        '<td>' + p.score + '</td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str == null ? '' : String(str);
+    return div.innerHTML;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SECTION: CONFIRM DIALOG
+  // ═══════════════════════════════════════════════════════════════════
+
+  var confirmOkHandler = null;
+  var confirmCancelHandler = null;
+
+  function openConfirm(title, text, onOk, onCancel) {
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-text').textContent = text;
+    confirmOkHandler = onOk;
+    confirmCancelHandler = onCancel;
+    document.getElementById('confirm-overlay').classList.add('active');
+  }
+
+  function closeConfirm() {
+    document.getElementById('confirm-overlay').classList.remove('active');
+    confirmOkHandler = null;
+    confirmCancelHandler = null;
+  }
+
+  document.getElementById('confirm-ok-btn').addEventListener('click', function () {
+    var handler = confirmOkHandler;
+    closeConfirm();
+    if (handler) handler();
+  });
+  document.getElementById('confirm-cancel-btn').addEventListener('click', function () {
+    var handler = confirmCancelHandler;
+    closeConfirm();
+    if (handler) handler();
+  });
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SECTION: EVENT WIRING
+  // ═══════════════════════════════════════════════════════════════════
+
+  document.getElementById('add-player-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var input = document.getElementById('add-player-input');
+    addPlayer(input.value);
+    input.value = '';
+    input.focus();
+  });
+
+  document.getElementById('undercover-minus').addEventListener('click', function () {
+    state.undercoverCount = clamp(state.undercoverCount - 1, 1, maxUndercovers());
+    render();
+  });
+  document.getElementById('undercover-plus').addEventListener('click', function () {
+    state.undercoverCount = clamp(state.undercoverCount + 1, 1, maxUndercovers());
+    render();
+  });
+
+  document.getElementById('mrwhite-minus').addEventListener('click', function () {
+    state.mrWhiteCount = clamp(state.mrWhiteCount - 1, 0, maxMrWhite());
+    render();
+  });
+  document.getElementById('mrwhite-plus').addEventListener('click', function () {
+    state.mrWhiteCount = clamp(state.mrWhiteCount + 1, 0, maxMrWhite());
+    render();
+  });
+
+  document.getElementById('specials-enabled').addEventListener('change', function (e) {
+    state.specialsEnabled = e.target.checked;
+    render();
+  });
+
+  document.querySelectorAll('#specials-list .stepper[data-role]').forEach(function (stepperEl) {
+    var role = stepperEl.getAttribute('data-role');
+    stepperEl.querySelector('.role-minus').addEventListener('click', function () {
+      state.roleCounts[role] = clamp(state.roleCounts[role] - 1, 0, maxRoleCount(role));
+      render();
+    });
+    stepperEl.querySelector('.role-plus').addEventListener('click', function () {
+      state.roleCounts[role] = clamp(state.roleCounts[role] + 1, 0, maxRoleCount(role));
+      render();
+    });
+  });
+
+  document.getElementById('start-game-btn').addEventListener('click', startGame);
+
+  document.getElementById('reveal-tap-btn').addEventListener('click', revealTap);
+  document.getElementById('reveal-hide-btn').addEventListener('click', revealHideAndPass);
+
+  document.getElementById('vote-pass-btn').addEventListener('click', beginVoteCast);
+  document.getElementById('boomerang-continue-btn').addEventListener('click', acknowledgeBoomerang);
+  document.getElementById('no-elim-continue-btn').addEventListener('click', acknowledgeNoElimination);
+
+  document.getElementById('mrwhite-guess-btn').addEventListener('click', function () {
+    var guess = document.getElementById('mrwhite-guess-input').value;
+    submitMrWhiteGuess(guess);
+  });
+
+  document.getElementById('play-again-btn').addEventListener('click', playAgain);
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SECTION: INIT
+  // ═══════════════════════════════════════════════════════════════════
+
+  render();
+  loadWords();
+
+  // Expose parseWordLines for automated testing (Node harness loads this via a DOM shim).
+  window.__undercover_test__ = { parseWordLines: parseWordLines };
+})();
+</script>
+</body>
+</html>
